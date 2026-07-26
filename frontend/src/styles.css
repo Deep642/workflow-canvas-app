@@ -381,6 +381,23 @@ h1 {
   color: var(--muted);
 }
 
+.template-picker {
+  position: relative;
+  z-index: 5;
+}
+
+.template-picker select {
+  position: relative;
+  z-index: 10;
+  -webkit-appearance: menulist;
+  appearance: menulist;
+  cursor: pointer;
+}
+
+.template-picker select option {
+  color: var(--ink);
+}
+
 .workflow-name-field input,
 .template-picker select,
 .editable-node__title,

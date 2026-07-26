@@ -42,10 +42,9 @@ const nodeTypes: NodeTypes = {
 interface NodeTemplate {
   id: string;
   label: string;
-  nodeKind: NodeKind;
-  title: string;
-  description: string;
-  imageUrl?: string;
+  name: string;
+  nodes: WorkflowNode[];
+  edges: Edge[];
 }
 
 const NODE_KIND_META: Record<NodeKind, { label: string; prefix: string }> = {
@@ -56,42 +55,102 @@ const NODE_KIND_META: Record<NodeKind, { label: string; prefix: string }> = {
   note: { label: 'Note', prefix: 'Note' }
 };
 
+const buildSampleNode = (
+  id: string,
+  nodeKind: NodeKind,
+  title: string,
+  description: string,
+  x: number,
+  y: number,
+  imageUrl = ''
+): WorkflowNode => ({
+  id,
+  position: { x, y },
+  data: { title, description, imageUrl, nodeKind },
+  type: 'editable'
+});
+
 const NODE_TEMPLATES: NodeTemplate[] = [
   {
     id: 'onboarding-flow',
     label: 'Customer Onboarding',
-    nodeKind: 'task',
-    title: 'Customer Onboarding Intake',
-    description: 'Collect profile data, required documents, and compliance confirmation.',
-    imageUrl: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=420&q=60'
+    name: 'Customer Onboarding Flow',
+    nodes: [
+      buildSampleNode('node-1', 'task', 'Collect Customer Info', 'Capture name, email, documents, and account preferences.', 80, 80),
+      buildSampleNode('node-2', 'decision', 'Verify Documents', 'Check documents and identity before moving to approval.', 340, 80),
+      buildSampleNode('node-3', 'api', 'Call Verification API', 'Send customer data to KYC service for validation.', 600, 80),
+      buildSampleNode('node-4', 'database', 'Store Onboarding Record', 'Persist onboarding status and audit details.', 860, 80)
+    ],
+    edges: [
+      { id: 'edge-1-2', source: 'node-1', target: 'node-2' },
+      { id: 'edge-2-3', source: 'node-2', target: 'node-3' },
+      { id: 'edge-3-4', source: 'node-3', target: 'node-4' }
+    ]
   },
   {
     id: 'risk-check',
     label: 'Risk Decision Gate',
-    nodeKind: 'decision',
-    title: 'Risk Scoring Decision',
-    description: 'Branch to manual review if score > 0.65, otherwise continue auto-approval.'
+    name: 'Risk Decision Gate',
+    nodes: [
+      buildSampleNode('node-1', 'decision', 'Risk Scoring Decision', 'Route high risk to manual review or low risk to approval.', 80, 80),
+      buildSampleNode('node-2', 'task', 'Manual Review', 'Human team reviews flagged cases for approval.', 340, 80),
+      buildSampleNode('node-3', 'task', 'Approve Transaction', 'Continue with automated approval flow.', 340, 240),
+      buildSampleNode('node-4', 'note', 'Record Risk Note', 'Log the decision outcome and risk score in the audit trail.', 600, 160)
+    ],
+    edges: [
+      { id: 'edge-1-2', source: 'node-1', target: 'node-2' },
+      { id: 'edge-1-3', source: 'node-1', target: 'node-3' },
+      { id: 'edge-2-4', source: 'node-2', target: 'node-4' },
+      { id: 'edge-3-4', source: 'node-3', target: 'node-4' }
+    ]
   },
   {
     id: 'payments-api',
     label: 'Payment API Call',
-    nodeKind: 'api',
-    title: 'POST /payments/authorize',
-    description: 'Send transaction payload and capture authorization code for audit logs.'
+    name: 'Payment API Architecture',
+    nodes: [
+      buildSampleNode('node-1', 'task', 'Prepare Transaction', 'Build payload and validate payment details.', 80, 80),
+      buildSampleNode('node-2', 'api', 'Call Payments API', 'Authorize payment with the payment provider.', 340, 80),
+      buildSampleNode('node-3', 'database', 'Save Transaction Record', 'Store transaction outcome and authorization data.', 600, 80),
+      buildSampleNode('node-4', 'note', 'Notify Finance Team', 'Send alert if authorization fails or needs review.', 860, 80)
+    ],
+    edges: [
+      { id: 'edge-1-2', source: 'node-1', target: 'node-2' },
+      { id: 'edge-2-3', source: 'node-2', target: 'node-3' },
+      { id: 'edge-3-4', source: 'node-3', target: 'node-4' }
+    ]
   },
   {
     id: 'audit-storage',
     label: 'Audit Storage',
-    nodeKind: 'database',
-    title: 'Write Audit Trail',
-    description: 'Persist immutable execution events, actor identity, and result metadata.'
+    name: 'Audit Storage Pipeline',
+    nodes: [
+      buildSampleNode('node-1', 'task', 'Capture Event', 'Record operation metadata and user context.', 80, 80),
+      buildSampleNode('node-2', 'database', 'Write Audit Log', 'Persist audit entries in immutable storage.', 340, 80),
+      buildSampleNode('node-3', 'api', 'Query Logs', 'Expose audit search endpoints for reporting.', 600, 80),
+      buildSampleNode('node-4', 'note', 'Retention Policy', 'Review and archive logs after compliance retention period.', 860, 80)
+    ],
+    edges: [
+      { id: 'edge-1-2', source: 'node-1', target: 'node-2' },
+      { id: 'edge-2-3', source: 'node-2', target: 'node-3' },
+      { id: 'edge-3-4', source: 'node-3', target: 'node-4' }
+    ]
   },
   {
     id: 'ops-note',
     label: 'Ops Checklist Note',
-    nodeKind: 'note',
-    title: 'Operational Note',
-    description: 'Escalate to on-call if retries exceed 3 in any 10 minute window.'
+    name: 'Ops Checklist Workflow',
+    nodes: [
+      buildSampleNode('node-1', 'note', 'Deployment Checklist', 'Verify service health, rollback plan, and post-deploy tests.', 80, 80),
+      buildSampleNode('node-2', 'task', 'Run Automation', 'Execute deployment automation and smoke tests.', 340, 80),
+      buildSampleNode('node-3', 'decision', 'Pass/Fail Review', 'If checks fail, trigger incident notifications.', 600, 80),
+      buildSampleNode('node-4', 'note', 'Incident Note', 'Log error context and follow-up actions for ops teams.', 860, 80)
+    ],
+    edges: [
+      { id: 'edge-1-2', source: 'node-1', target: 'node-2' },
+      { id: 'edge-2-3', source: 'node-2', target: 'node-3' },
+      { id: 'edge-3-4', source: 'node-3', target: 'node-4' }
+    ]
   }
 ];
 
@@ -160,7 +219,7 @@ export function CanvasEditor() {
   const resetCanvas = useCanvasStore((state) => state.resetCanvas);
 
   const { data: library = [] } = useGetCanvasLibrary();
-  const { data: latestCanvas, isLoading, isError, error } = useGetCanvas(undefined);
+  const { data: latestCanvas, isLoading: latestLoading, isError: latestError, error } = useGetCanvas(undefined);
   const { data: selectedCanvas } = useGetCanvas(selectedCanvasId);
   const saveMutation = useSaveCanvas();
   const renameMutation = useRenameCanvas();
@@ -170,10 +229,26 @@ export function CanvasEditor() {
   const importMutation = useImportCanvas();
 
   useEffect(() => {
-    if (latestCanvas && !hydrated) {
-      loadCanvas(normalizeCanvas(latestCanvas));
+    if (hydrated) {
+      return;
     }
-  }, [latestCanvas, hydrated, loadCanvas]);
+
+    if (latestLoading) {
+      return;
+    }
+
+    const template = NODE_TEMPLATES.find((entry) => entry.id === selectedTemplateId) || NODE_TEMPLATES[0];
+    const hasSavedCanvas = Boolean(latestCanvas && latestCanvas.nodes && latestCanvas.nodes.length > 0);
+
+    if (latestError || !latestCanvas || !hasSavedCanvas) {
+      setNodes(template.nodes);
+      setEdges(template.edges);
+      setName(template.name);
+      return;
+    }
+
+    loadCanvas(normalizeCanvas(latestCanvas));
+  }, [latestCanvas, latestLoading, latestError, hydrated, loadCanvas, selectedTemplateId, setEdges, setName, setNodes]);
 
   useEffect(() => {
     if (selectedCanvas && selectedCanvasId === selectedCanvas._id) {
@@ -237,17 +312,20 @@ export function CanvasEditor() {
     addNode(createNode(nodes.length + 1, nodeKind));
   };
 
+  const loadTemplate = (templateId: string) => {
+    const template = NODE_TEMPLATES.find((entry) => entry.id === templateId) || NODE_TEMPLATES[0];
+    setNodes(template.nodes);
+    setEdges(template.edges);
+    setName(template.name);
+  };
+
   const handleAddTemplateNode = () => {
-    const template = NODE_TEMPLATES.find((entry) => entry.id === selectedTemplateId) || NODE_TEMPLATES[0];
-    addNode({
-      ...createNode(nodes.length + 1, template.nodeKind),
-      data: {
-        title: template.title,
-        description: template.description,
-        imageUrl: template.imageUrl || '',
-        nodeKind: template.nodeKind
-      }
-    });
+    loadTemplate(selectedTemplateId);
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    loadTemplate(templateId);
   };
 
   const handleSave = async () => {
@@ -474,14 +552,14 @@ export function CanvasEditor() {
             <span>Template</span>
             <select
               value={selectedTemplateId}
-              onChange={(event) => setSelectedTemplateId(event.target.value)}
+              onChange={(event) => handleTemplateChange(event.target.value)}
             >
               {NODE_TEMPLATES.map((template) => (
                 <option key={template.id} value={template.id}>{template.label}</option>
               ))}
             </select>
           </label>
-          <button type="button" onClick={handleAddTemplateNode}>Add Template</button>
+          <button type="button" onClick={handleAddTemplateNode}>Load Template</button>
           <button type="button" onClick={handleSave} disabled={savingInProgress}>
             {savingInProgress ? 'Saving...' : 'Save Layout'}
           </button>
@@ -492,16 +570,16 @@ export function CanvasEditor() {
           <input ref={importInputRef} type="file" accept="application/json" hidden onChange={handleImportFile} />
           <button type="button" onClick={handleReset}>Reset Canvas</button>
           <div className="toolbar-state">
-            <span>{isLoading ? 'Hydrating canvas...' : 'Canvas ready'}</span>
+            <span>{latestLoading ? 'Hydrating canvas...' : 'Canvas ready'}</span>
             {hasUnsavedDraft ? <span>Unsaved draft</span> : null}
             {!hasUnsavedDraft && dirty ? <span>Unsaved changes</span> : null}
             {!dirty && lastSavedAt ? <span>Saved at {formatTimestamp(lastSavedAt)}</span> : null}
-            {isError ? <span>Load failed</span> : null}
+            {latestError ? <span>Load failed</span> : null}
             {saveMutation.isError || renameMutation.isError || deleteMutation.isError ? <span>Save failed</span> : null}
           </div>
         </div>
 
-        {isError ? (
+        {latestError ? (
           <p className="error-message">{(error as Error).message}</p>
         ) : null}
 
