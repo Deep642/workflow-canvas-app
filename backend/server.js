@@ -1,12 +1,14 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 const canvasRoutes = require('./routes/canvasRoutes');
 const authRoutes = require('./routes/authRoutes');
-
-dotenv.config();
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -20,6 +22,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/canvas', canvasRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.use((err, _req, res, _next) => {
 	// Centralized fallback so API errors are always JSON.
@@ -36,6 +39,14 @@ const connectAndStart = async () => {
 
 		if (!process.env.JWT_SECRET) {
 			throw new Error('JWT_SECRET is missing in backend/.env');
+		}
+
+		if (!process.env.GROQ_API_KEY) {
+			console.warn('⚠️  GROQ_API_KEY is missing - AI features will not work');
+		}
+
+		if (!process.env.QDRANT_URL) {
+			console.warn('⚠️  QDRANT_URL is missing - Vector DB features will not work');
 		}
 
 		await mongoose.connect(process.env.MONGO_URI);

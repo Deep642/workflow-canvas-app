@@ -1,0 +1,8 @@
+{
+  "development": {
+    "apiBaseUrl": "http://localhost:5000"
+  },
+  "production": {
+    "apiBaseUrl": "https://workflow-canvas-backend-hfqa.onrender.com"
+  }
+}

@@ -1,9 +1,16 @@
 import axios from 'axios';
+import environment from '../../environment.json';
 
 const AUTH_TOKEN_KEY = 'workflow-canvas-token';
 
+// Determine environment: use production config if not on localhost
+const isProduction = !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
+const apiBaseUrl = isProduction 
+  ? environment.production.apiBaseUrl 
+  : environment.development.apiBaseUrl;
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+  baseURL: apiBaseUrl
 });
 
 export const getAuthToken = () => localStorage.getItem(AUTH_TOKEN_KEY);

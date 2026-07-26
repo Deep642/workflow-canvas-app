@@ -28,10 +28,15 @@ import {
   useShareCanvas
 } from '../hooks/useCanvasData';
 import { useCanvasStore } from '../store/useCanvasStore';
-import { EditableNode } from './EditableNode';
+import { EditableNodeWithAI } from './EditableNodeWithAI';
+import { ErrorBoundary } from '../../../components/ErrorBoundary';
 
 const nodeTypes: NodeTypes = {
-  editable: EditableNode
+  editable: (props) => (
+    <ErrorBoundary>
+      <EditableNodeWithAI {...props} />
+    </ErrorBoundary>
+  ),
 };
 
 interface NodeTemplate {
